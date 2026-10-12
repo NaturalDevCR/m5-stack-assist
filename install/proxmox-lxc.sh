@@ -41,10 +41,24 @@ if [[ "$OS_VERSION" == "13" && "${PVE_MAJOR:-0}" -lt 9 ]]; then
   msg "Proxmox VE $PVE_MAJOR no soporta Debian 13 en LXC; se usará Debian 12"
   OS_VERSION=12
 fi
-msg "Buscando plantilla Debian $OS_VERSION…"
+HOST_ARCH="$(dpkg --print-architecture)"
+case "$HOST_ARCH" in amd64|arm64) ;; *) die "arquitectura no soportada: $HOST_ARCH" ;; esac
+# pveam ofrece plantillas de varias arquitecturas (p. ej. *_amd64 y *_arm64): hay que
+# filtrar por la del nodo o el contenedor falla con "Exec format error" en /sbin/init.
+msg "Buscando plantilla Debian $OS_VERSION ($HOST_ARCH)…"
 pveam update >/dev/null || true
-TEMPLATE="$(pveam available --section system | awk '{print $2}' | grep -E "^debian-${OS_VERSION}-standard" | sort -V | tail -1)"
-[[ -n "$TEMPLATE" ]] || die "no se encontró plantilla debian-${OS_VERSION}-standard en pveam"
+TEMPLATE="$(pveam available --section system | awk '{print $2}' \
+  | grep -E "^debian-${OS_VERSION}-standard_.*_${HOST_ARCH}\.tar\." | sort -V | tail -1)"
+LXC_BASE=""
+if [[ -z "$TEMPLATE" && "$HOST_ARCH" == "arm64" ]]; then
+  # Sin plantilla arm64 en pveam: imagen Debian oficial de linuxcontainers.org.
+  CODENAME="trixie"; [[ "$OS_VERSION" == "12" ]] && CODENAME="bookworm"
+  LXC_BASE="https://images.linuxcontainers.org/images/debian/$CODENAME/arm64/default"
+  BUILD="$(curl -fsSL "$LXC_BASE/" | grep -oE '[0-9]{8}_[0-9]{2}%3A[0-9]{2}' | sort -u | tail -1)"
+  [[ -n "$BUILD" ]] || die "no se encontró imagen Debian arm64 en $LXC_BASE"
+  TEMPLATE="debian-${OS_VERSION}-lxc_${BUILD%%_*}_arm64.tar.xz"
+fi
+[[ -n "$TEMPLATE" ]] || die "no se encontró plantilla debian-${OS_VERSION}-standard para $HOST_ARCH"
 
 NET="name=eth0,bridge=$BRIDGE,ip=$IP"
 [[ -n "$VLAN" ]] && NET="$NET,tag=$VLAN"
@@ -55,7 +69,7 @@ cat <<EOF
   ───────────────────────────────────
   CTID ............ $CTID
   Hostname ........ $HOSTNAME_CT
-  Plantilla ....... $TEMPLATE
+  Plantilla ....... $TEMPLATE ($HOST_ARCH)
   CPU / RAM / Disco $CORES núcleo(s) / ${RAM} MB / ${DISK} GB en $STORAGE
   Red ............. $NET
   Repositorio ..... $REPO_URL ($BRANCH)
@@ -69,13 +83,27 @@ fi
 
 if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE"; then
   msg "Descargando $TEMPLATE…"
-  pveam download "$TEMPLATE_STORAGE" "$TEMPLATE" >/dev/null
+  if [[ -z "$LXC_BASE" ]]; then
+    pveam download "$TEMPLATE_STORAGE" "$TEMPLATE" >/dev/null
+  else
+    DEST="$(pvesm path "$TEMPLATE_STORAGE:vztmpl/$TEMPLATE")"
+    mkdir -p "$(dirname "$DEST")"
+    curl -fL --progress-bar -o "$DEST.part" "$LXC_BASE/$BUILD/rootfs.tar.xz"
+    EXPECTED="$(curl -fsSL "$LXC_BASE/$BUILD/SHA256SUMS" | awk '$2=="rootfs.tar.xz"{print $1}')"
+    ACTUAL="$(sha256sum "$DEST.part" | awk '{print $1}')"
+    if [[ -z "$EXPECTED" || "$EXPECTED" != "$ACTUAL" ]]; then
+      rm -f "$DEST.part"
+      die "checksum SHA256 inválido para rootfs.tar.xz"
+    fi
+    mv "$DEST.part" "$DEST"
+  fi
 fi
 
 msg "Creando contenedor $CTID…"
 pct create "$CTID" "$TEMPLATE_STORAGE:vztmpl/$TEMPLATE" \
   --hostname "$HOSTNAME_CT" --cores "$CORES" --memory "$RAM" --swap "$SWAP" \
   --rootfs "$STORAGE:$DISK" --net0 "$NET" \
+  --arch "$HOST_ARCH" --ostype debian \
   --unprivileged 1 --features nesting=1 --onboot 1 --timezone host \
   --description "Danny voice bridge — $REPO_URL" >/dev/null
 if ! pct start "$CTID"; then
