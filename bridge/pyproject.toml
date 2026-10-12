@@ -1,0 +1,30 @@
+[project]
+name = "danny-bridge"
+version = "0.1.0"
+description = "Puente entre terminales de voz (AtomS3R / audio local), ElevenLabs Agents y Home Assistant"
+requires-python = ">=3.11"
+dependencies = [
+    "websockets>=17.2,<18",
+    "aiomqtt>=2.5,<3",
+    "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+# Terminal de audio local (micrófono/parlante del equipo). No se instala en el LXC.
+local = ["sounddevice>=0.5,<0.6"]
+
+[project.scripts]
+danny-bridge = "danny_bridge.__main__:main"
+
+[dependency-groups]
+dev = ["pytest>=9.1,<10"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["danny_bridge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

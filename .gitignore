@@ -29,3 +29,6 @@ dependencies.lock
 
 # macOS
 .DS_Store
+
+# Puente: configuración local de pruebas
+bridge/config.local.yaml

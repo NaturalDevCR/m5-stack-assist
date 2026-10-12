@@ -1,0 +1,37 @@
+# Configuración del puente Danny. Copiar a /etc/danny-bridge/config.yaml.
+# Los SECRETOS van en /etc/danny-bridge/danny-bridge.env (ver danny-bridge.env.example).
+
+persona: danny
+timezone: America/Costa_Rica
+state_file: /var/lib/danny-bridge/state.json
+log_level: INFO
+
+elevenlabs:
+  agent_id: agent_9401m4hv6mgaecp9jbtbcwwan1qw
+  base_url: https://api.elevenlabs.io
+  greetings_file: /opt/danny-bridge/personas/danny/saludos.txt
+  cost_per_min_usd: 0.08
+
+session:
+  max_session_s: 240        # tope por grupo (el agente tiene 300 s como red de seguridad)
+  idle_timeout_s: 20        # sin que los visitantes hablen → Danny se despide
+  farewell_timeout_s: 12    # espera a que Danny se despida y cuelgue
+  cooldown_s: 30            # pausa antes de aceptar un nuevo "visitante detectado"
+  playback_tail_ms: 300     # micrófono en silencio tras terminar de hablar (anti-eco)
+  input_chunk_ms: 100
+
+terminal:
+  type: websocket           # websocket (AtomS3R) | local (micrófono/parlante del equipo)
+  websocket:
+    host: 0.0.0.0
+    port: 8765
+
+mqtt:
+  enabled: true
+  host: 192.168.1.10        # IP de tu broker (Mosquitto de Home Assistant)
+  port: 1883
+  username: danny-bridge
+  discovery_prefix: homeassistant
+  base_topic: danny
+  device_id: danny_bridge
+  device_name: Danny

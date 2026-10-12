@@ -1,0 +1,24 @@
+[Unit]
+Description=Danny voice bridge (terminales <-> ElevenLabs Agents <-> Home Assistant)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=danny
+Group=danny
+WorkingDirectory=/opt/danny-bridge/bridge
+EnvironmentFile=/etc/danny-bridge/danny-bridge.env
+ExecStart=/opt/danny-bridge/bridge/.venv/bin/danny-bridge run --config /etc/danny-bridge/config.yaml --env /etc/danny-bridge/danny-bridge.env
+Restart=always
+RestartSec=5
+
+# Endurecimiento
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/danny-bridge
+
+[Install]
+WantedBy=multi-user.target

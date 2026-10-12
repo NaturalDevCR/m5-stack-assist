@@ -1,0 +1,24 @@
+# Prueba en tu computadora con micrófono y parlante (sin Atom, sin MQTT).
+#   cp config.local.example.yaml config.local.yaml
+#   uv sync --extra local
+#   uv run danny-bridge run --config config.local.yaml --env ../tools/el_spike/.env --enter
+state_file: ./out/state.json
+log_level: INFO
+
+elevenlabs:
+  agent_id: agent_9401m4hv6mgaecp9jbtbcwwan1qw
+  greetings_file: ../personas/danny/saludos.txt
+
+session:
+  max_session_s: 240
+  idle_timeout_s: 20
+  cooldown_s: 5
+
+terminal:
+  type: local
+  local:
+    input_device: null    # null = predeterminado; ver: uv run python -m sounddevice
+    output_device: null
+
+mqtt:
+  enabled: false

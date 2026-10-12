@@ -8,9 +8,21 @@ integrado con Home Assistant. Arquitectura reutilizable: terminal de audio ⇄ p
 | Hito | Estado |
 |---|---|
 | Investigación y arquitectura | Decidida → [docs/01](docs/01-investigacion-y-decision-arquitectura.md) |
-| H2 adelantado: prueba ElevenLabs sin hardware | Listo para ejecutar → [tools/el_spike](tools/el_spike/README.md) |
-| H1 hardware | Pendiente de recibir el hardware |
-| H3–H7 | Pendiente |
+| Agente ElevenLabs (prompt, voz, base de conocimiento) | Publicado v1.7 → [docs/02](docs/02-configuracion-agente-elevenlabs.md) |
+| H2/H4/H5: puente (sesiones, ElevenLabs, Home Assistant) | Listo → [bridge](bridge/README.md) |
+| H1 hardware (AtomS3R) | Pendiente de recibir el hardware |
+| H6–H7 | Pendiente |
+
+## Instalar el puente en Proxmox (LXC)
+
+En la shell del nodo Proxmox:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/NaturalDevCR/m5-stack-assist/main/install/proxmox-lxc.sh)"
+```
+
+Crea un contenedor Debian sin privilegios e instala `danny-bridge` como servicio. Opciones
+y configuración posterior en [bridge/README.md](bridge/README.md#instalación-en-proxmox-lxc).
 
 ## Estructura
 
@@ -25,7 +37,8 @@ personas/danny/             personalidad (independiente del hardware)
   despedidas.txt            despedidas de respaldo
 tools/el_spike/             prueba de conversación real sin hardware + pruebas offline
 firmware/                   (H1) firmware ESP-IDF del terminal
-bridge/                     (H2+) puente Python: sesiones, ElevenLabs, MQTT/HA
+bridge/                     puente Python: sesiones, ElevenLabs, MQTT/HA, terminales
+install/                    instaladores (Proxmox LXC one-liner, Debian)
 ```
 
 ## Seguridad
