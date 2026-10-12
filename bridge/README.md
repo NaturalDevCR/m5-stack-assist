@@ -24,6 +24,10 @@ Terminal (AtomS3R / audio local) ⇄ danny-bridge ⇄ ElevenLabs Agents
 - **Reconexión:** MQTT con reintentos; los terminales se reconectan solos; el servicio
   systemd se reinicia si falla.
 
+## Instalación como app de Home Assistant
+
+Forma recomendada: ver [../danny_bridge/DOCS.md](../danny_bridge/DOCS.md) y el README principal.
+
 ## Instalación en Proxmox (LXC)
 
 En la shell del nodo Proxmox:

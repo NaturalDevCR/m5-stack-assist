@@ -9,20 +9,34 @@ integrado con Home Assistant. Arquitectura reutilizable: terminal de audio ⇄ p
 |---|---|
 | Investigación y arquitectura | Decidida → [docs/01](docs/01-investigacion-y-decision-arquitectura.md) |
 | Agente ElevenLabs (prompt, voz, base de conocimiento) | Publicado v1.7 → [docs/02](docs/02-configuracion-agente-elevenlabs.md) |
-| H2/H4/H5: puente (sesiones, ElevenLabs, Home Assistant) | Listo → [bridge](bridge/README.md) |
+| H2/H4/H5: puente (sesiones, ElevenLabs, Home Assistant) | Listo como app de HA → [danny_bridge](danny_bridge/DOCS.md) · código en [bridge](bridge/README.md) |
 | H1 hardware (AtomS3R) | Pendiente de recibir el hardware |
 | H6–H7 | Pendiente |
 
-## Instalar el puente en Proxmox (LXC)
+## Instalar el puente como app de Home Assistant (recomendado)
 
-En la shell del nodo Proxmox:
+1. En Home Assistant: **Ajustes → Aplicaciones (antes "Complementos") → Tienda → ⋮ → Repositorios** y agrega:
+
+   ```
+   https://github.com/NaturalDevCR/m5-stack-assist
+   ```
+
+2. Instala **Danny Bridge**. En la pestaña **Configuración** pega la clave API de ElevenLabs
+   (permiso *ElevenAgents: Escribir*) e inicia la app.
+3. MQTT se configura solo con la app Mosquitto; Danny aparece como dispositivo en
+   *Dispositivos → MQTT*. El token para el AtomS3R aparece en la pestaña **Registro**.
+
+Detalle: [danny_bridge/DOCS.md](danny_bridge/DOCS.md).
+
+### Alternativa: LXC en Proxmox
+
+Para correr el puente fuera de Home Assistant, en la shell del nodo Proxmox:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/NaturalDevCR/m5-stack-assist/main/install/proxmox-lxc.sh)"
 ```
 
-Crea un contenedor Debian sin privilegios e instala `danny-bridge` como servicio. Opciones
-y configuración posterior en [bridge/README.md](bridge/README.md#instalación-en-proxmox-lxc).
+Opciones y configuración en [bridge/README.md](bridge/README.md#instalación-en-proxmox-lxc).
 
 ## Estructura
 
@@ -38,6 +52,8 @@ personas/danny/             personalidad (independiente del hardware)
 tools/el_spike/             prueba de conversación real sin hardware + pruebas offline
 firmware/                   (H1) firmware ESP-IDF del terminal
 bridge/                     puente Python: sesiones, ElevenLabs, MQTT/HA, terminales
+danny_bridge/               app de Home Assistant (empaqueta bridge/)
+repository.yaml             repositorio de apps de Home Assistant
 install/                    instaladores (Proxmox LXC one-liner, Debian)
 ```
 

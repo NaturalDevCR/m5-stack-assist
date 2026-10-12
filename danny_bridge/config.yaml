@@ -1,0 +1,40 @@
+name: Danny Bridge
+version: "0.2.0"
+slug: danny_bridge
+description: Puente de voz entre el terminal AtomS3R, ElevenLabs Agents y Home Assistant
+url: https://github.com/NaturalDevCR/m5-stack-assist
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+services:
+  - mqtt:want
+ports:
+  8765/tcp: 8765
+options:
+  elevenlabs_api_key: null
+  agent_id: agent_9401m4hv6mgaecp9jbtbcwwan1qw
+  terminal_token: ""
+  max_session_s: 240
+  idle_timeout_s: 20
+  cooldown_s: 30
+  farewell_phrase: Bueno, muchas gracias, ya nos tenemos que ir.
+  greetings: []
+  log_level: info
+schema:
+  elevenlabs_api_key: password
+  agent_id: str
+  terminal_token: password?
+  max_session_s: int(60,900)
+  idle_timeout_s: int(5,120)
+  cooldown_s: int(0,600)
+  farewell_phrase: str
+  greetings:
+    - str?
+  log_level: list(debug|info|warning|error)
+  mqtt_host: str?
+  mqtt_port: port?
+  mqtt_username: str?
+  mqtt_password: password?

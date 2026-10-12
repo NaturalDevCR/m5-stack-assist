@@ -2,6 +2,7 @@
 
   danny-bridge run   [--config FILE] [--terminal local] [--enter]
   danny-bridge check [--config FILE]
+  danny-bridge addon [--options /data/options.json]   (app de Home Assistant)
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ import argparse
 import asyncio
 import contextlib
 import logging
+import os
 import signal
 import sys
 import threading
@@ -42,8 +44,11 @@ def _load(args):
     return cfg
 
 
-async def _run(cfg, enter: bool) -> int:
+async def _run(cfg, enter: bool, addon: bool = False) -> int:
     store = StateStore(cfg.state_file, cfg.timezone)
+    if addon:
+        from .addon import sync_form_settings
+        sync_form_settings(cfg, store)
     terminal = create_terminal(cfg)
     manager = SessionManager(cfg, terminal, store)
     tasks: list[asyncio.Task] = []
@@ -120,6 +125,22 @@ def cmd_run(args) -> int:
     return asyncio.run(_run(cfg, args.enter))
 
 
+def cmd_addon(args) -> int:
+    from .addon import build_config, load_options
+    options = load_options(Path(args.options))
+    _setup_logging(str(options.get("log_level", "info")))
+    cfg = build_config(options, dict(os.environ))
+    problems = [p for p in validate(cfg) if "DANNY_TERMINAL_TOKEN" not in p]
+    if problems:
+        for p in problems:
+            LOG.error("configuración de la app: %s", p.replace("falta ELEVENLABS_API_KEY en el entorno",
+                                                               "falta la clave API de ElevenLabs"))
+        return 1
+    if not cfg.mqtt.enabled:
+        LOG.warning("sin broker MQTT: Danny funcionará, pero no aparecerá en Home Assistant")
+    return asyncio.run(_run(cfg, enter=False, addon=True))
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="danny-bridge", description=__doc__.splitlines()[0])
     p.add_argument("--version", action="version", version=__version__)
@@ -128,13 +149,15 @@ def main(argv: list[str] | None = None) -> int:
         sp = sub.add_parser(name)
         sp.add_argument("--config", default=DEFAULT_CONFIG)
         sp.add_argument("--env", default=DEFAULT_ENV, help="archivo de secretos KEY=VALUE")
+    addon = sub.add_parser("addon")
+    addon.add_argument("--options", default="/data/options.json")
     run = sub.choices["run"]
     run.add_argument("--terminal", choices=["websocket", "local"])
     run.add_argument("--enter", action="store_true",
                      help="Enter inicia/termina la conversación (pruebas locales)")
     args = p.parse_args(argv)
     try:
-        return cmd_run(args) if args.cmd == "run" else cmd_check(args)
+        return {"run": cmd_run, "check": cmd_check, "addon": cmd_addon}[args.cmd](args)
     except ConfigError as exc:
         print(f"✗ {exc}", file=sys.stderr)
         return 2

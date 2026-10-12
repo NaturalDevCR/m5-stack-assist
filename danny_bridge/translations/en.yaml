@@ -1,0 +1,41 @@
+configuration:
+  elevenlabs_api_key:
+    name: ElevenLabs API key
+    description: Key with "ElevenAgents: Write" permission. Stored only in Home Assistant.
+  agent_id:
+    name: Agent ID
+    description: ElevenLabs agent ID (agent_…).
+  terminal_token:
+    name: Terminal token
+    description: >-
+      Secret the AtomS3R must present. Leave empty to generate one (shown in the app log).
+  max_session_s:
+    name: Max conversation length (s)
+    description: Hard limit per group; then Danny says goodbye.
+  idle_timeout_s:
+    name: Idle time before goodbye (s)
+    description: Seconds without visitor speech after Danny's last answer.
+  cooldown_s:
+    name: Cooldown between groups (s)
+    description: Time during which "Visitor detected" is ignored after a conversation.
+  farewell_phrase:
+    name: Farewell phrase
+    description: >-
+      Visitor-style phrase sent so Danny says goodbye and hangs up. Do not use
+      "system notes": they trigger the agent's prompt-injection guardrail.
+  greetings:
+    name: Greetings (optional)
+    description: Greeting bank (one is picked at random per conversation). Empty = Danny's bundled greetings.
+  log_level:
+    name: Log level
+  mqtt_host:
+    name: MQTT broker (optional)
+    description: Only if you do NOT use the Mosquitto app.
+  mqtt_port:
+    name: MQTT port (optional)
+  mqtt_username:
+    name: MQTT username (optional)
+  mqtt_password:
+    name: MQTT password (optional)
+network:
+  8765/tcp: AtomS3R terminal (WebSocket)

@@ -26,6 +26,7 @@ class DayStats:
 class PersistentState:
     enabled: bool = True
     overrides: dict[str, float] = field(default_factory=dict)  # max_session_s, idle_timeout_s, cooldown_s
+    form_settings: dict[str, float] = field(default_factory=dict)  # modo app: últimos valores del formulario
     today: DayStats = field(default_factory=DayStats)
 
 
@@ -48,6 +49,7 @@ class StateStore:
         self.state = PersistentState(
             enabled=bool(data.get("enabled", True)),
             overrides={k: float(v) for k, v in (data.get("overrides") or {}).items()},
+            form_settings={k: float(v) for k, v in (data.get("form_settings") or {}).items()},
             today=DayStats(**(data.get("today") or {})),
         )
 
