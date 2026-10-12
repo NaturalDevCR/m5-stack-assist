@@ -6,6 +6,7 @@
 #
 # Variables opcionales (anteponer al comando, p. ej. CTID=237 IP=192.168.20.37/24,gw=192.168.20.1):
 #   CTID  HOSTNAME_CT  CORES  RAM  SWAP  DISK  STORAGE  TEMPLATE_STORAGE  BRIDGE  IP  VLAN
+#   OS_VERSION (12 por defecto; 13 requiere Proxmox VE 9)
 #   REPO_URL  BRANCH  YES=1 (sin confirmación)
 set -euo pipefail
 
@@ -22,6 +23,7 @@ TEMPLATE_STORAGE="${TEMPLATE_STORAGE:-local}"
 BRIDGE="${BRIDGE:-vmbr0}"
 IP="${IP:-dhcp}"
 VLAN="${VLAN:-}"
+OS_VERSION="${OS_VERSION:-12}"
 
 msg() { printf '\e[1;36m[danny]\e[0m %s\n' "$*"; }
 die() { printf '\e[1;31m[danny] ERROR:\e[0m %s\n' "$*" >&2; exit 1; }
@@ -32,11 +34,17 @@ CTID="${CTID:-$(pvesh get /cluster/nextid)}"
 pct status "$CTID" >/dev/null 2>&1 && die "el CTID $CTID ya existe (usa CTID=<otro>)"
 pvesm status --storage "$STORAGE" >/dev/null 2>&1 || die "no existe el almacenamiento '$STORAGE' (usa STORAGE=<nombre>)"
 
-msg "Buscando plantilla Debian…"
+# Debian 13 sólo arranca en Proxmox VE 9+: en PVE 8 el contenedor se crea pero falla
+# al iniciar ("unsupported debian version" / "Failed to spawn container").
+PVE_MAJOR="$(pveversion | sed -E 's#^pve-manager/([0-9]+).*#\1#')"
+if [[ "$OS_VERSION" == "13" && "${PVE_MAJOR:-0}" -lt 9 ]]; then
+  msg "Proxmox VE $PVE_MAJOR no soporta Debian 13 en LXC; se usará Debian 12"
+  OS_VERSION=12
+fi
+msg "Buscando plantilla Debian $OS_VERSION…"
 pveam update >/dev/null || true
-TEMPLATE="$(pveam available --section system | awk '{print $2}' | grep -E '^debian-13-standard' | sort -V | tail -1)"
-[[ -n "$TEMPLATE" ]] || TEMPLATE="$(pveam available --section system | awk '{print $2}' | grep -E '^debian-12-standard' | sort -V | tail -1)"
-[[ -n "$TEMPLATE" ]] || die "no se encontró plantilla Debian 12/13 en pveam"
+TEMPLATE="$(pveam available --section system | awk '{print $2}' | grep -E "^debian-${OS_VERSION}-standard" | sort -V | tail -1)"
+[[ -n "$TEMPLATE" ]] || die "no se encontró plantilla debian-${OS_VERSION}-standard en pveam"
 
 NET="name=eth0,bridge=$BRIDGE,ip=$IP"
 [[ -n "$VLAN" ]] && NET="$NET,tag=$VLAN"
@@ -70,7 +78,11 @@ pct create "$CTID" "$TEMPLATE_STORAGE:vztmpl/$TEMPLATE" \
   --rootfs "$STORAGE:$DISK" --net0 "$NET" \
   --unprivileged 1 --features nesting=1 --onboot 1 --timezone host \
   --description "Danny voice bridge — $REPO_URL" >/dev/null
-pct start "$CTID"
+if ! pct start "$CTID"; then
+  printf '\n'
+  pct start "$CTID" --debug 2>&1 | tail -20 || true
+  die "el contenedor $CTID no arrancó (diagnóstico arriba). Para borrarlo: pct destroy $CTID"
+fi
 
 msg "Esperando red en el contenedor…"
 for _ in $(seq 1 30); do

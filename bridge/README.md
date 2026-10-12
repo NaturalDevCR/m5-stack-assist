@@ -32,7 +32,7 @@ En la shell del nodo Proxmox:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/NaturalDevCR/m5-stack-assist/main/install/proxmox-lxc.sh)"
 ```
 
-Crea un LXC Debian 13 sin privilegios (1 núcleo, 512 MB, 4 GB, DHCP en `vmbr0`), instala el
+Crea un LXC Debian 12 sin privilegios (Debian 13 con `OS_VERSION=13` en Proxmox VE 9+) (1 núcleo, 512 MB, 4 GB, DHCP en `vmbr0`), instala el
 servicio y genera el token del terminal. Para personalizar, antepone variables, por ejemplo:
 
 ```bash
