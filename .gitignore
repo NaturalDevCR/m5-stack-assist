@@ -1,0 +1,31 @@
+# Credenciales y configuración local: NUNCA al repositorio
+.env
+*.env
+!*.env.example
+secrets.yaml
+sdkconfig.local
+credentials*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Resultados de pruebas de audio
+out/
+*.wav
+*.aiff
+!tests/fixtures/*.wav
+
+# ESP-IDF
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+
+# macOS
+.DS_Store

@@ -1,0 +1,20 @@
+[project]
+name = "el-spike"
+version = "0.1.0"
+description = "Prueba sin hardware de ElevenLabs Agents para el proyecto Danny"
+requires-python = ">=3.11"
+dependencies = [
+    "websockets>=17.2,<18",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1,<10",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -1,0 +1,18 @@
+# Un saludo por línea. El puente elige uno al azar y lo pasa al agente como
+# variable dinámica {{saludo}} (first_message del agente = "{{saludo}}").
+# Breves: se pronuncian sin esperar al LLM. Terminar con pregunta invita a responder.
+Ah, bienvenidos al Hotel Overlook. Qué placer recibirlos... hace mucho que los estábamos esperando. Díganme, ¿es su primera visita?
+Buenas noches, distinguidos huéspedes. Soy Danny, su conserje. ¿Vienen a hospedarse... o sólo de paso?
+Bienvenidos. Sus habitaciones están listas desde hace años, aunque eso aquí no es nada extraño. ¿Con quién tengo el gusto?
+Ah, caras nuevas. Al hotel le encantan las caras nuevas. ¿Qué los trae por el Overlook esta noche?
+Pasen, pasen, no se queden en la puerta; a veces se cierra sola. ¿En qué puedo servirles?
+Buenas noches. Soy Danny, conserje del Overlook desde... bueno, desde siempre. ¿Es la primera vez que nos visitan?
+Bienvenidos al Overlook, donde el servicio es impecable y la estancia, en algunos casos, permanente. ¿Cómo se llaman?
+Ah, justo a tiempo. El hotel estaba algo silencioso esta noche. ¿Vienen por la fiesta o por la habitación doscientos treinta y siete?
+Qué alegría verlos. Nuestros huéspedes más antiguos también se alegran, aunque ellos no lo demuestran tanto. ¿En qué puedo ayudarles?
+Buenas noches y bienvenidos. Permítanme adivinar... ¿fanáticos del cine de terror?
+Bienvenidos. Les ruego no hagan caso a los ruidos del tercer piso; es sólo el personal. Casi siempre. ¿Primera visita?
+Ah, huéspedes con excelente gusto, a juzgar por esos disfraces. ¿Quién de ustedes es el más valiente?
+Buenas noches. El Overlook les da la bienvenida, y el Overlook no olvida a nadie. ¿Cómo puedo servirles?
+Adelante, el hotel los estaba esperando. Yo también, pero con menos insistencia. ¿Qué película de terror los trajo hasta aquí?
+Bienvenidos. Soy Danny. Si necesitan algo, sólo tienen que pedirlo... o pensarlo con suficiente fuerza. ¿Cómo se llaman?

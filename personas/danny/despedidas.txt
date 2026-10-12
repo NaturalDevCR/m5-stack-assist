@@ -1,0 +1,7 @@
+# Despedidas de respaldo. Se generarán UNA vez con la voz de Danny (TTS) y el
+# puente las reproducirá si la despedida dentro de la sesión falla (Hito 4).
+Ha sido un verdadero placer atenderlos. Disfruten de su visita... y procuren no extraviarse. Nuestro personal de limpieza ya tiene suficiente trabajo.
+Los dejo continuar. Si escuchan que alguien los llama por su nombre en el pasillo, no se detengan. Buenas noches.
+Ha sido un honor. Recuerden: el checkout es a medianoche... para quienes logran hacerlo.
+Que disfruten la fiesta. Yo estaré aquí, como siempre. Literalmente, como siempre.
+Buenas noches, queridos huéspedes. El Overlook ya los recuerda con cariño.
