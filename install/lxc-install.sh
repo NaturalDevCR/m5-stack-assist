@@ -82,7 +82,7 @@ else
 
     1. nano $CONF_DIR/danny-bridge.env     (ELEVENLABS_API_KEY y MQTT_PASSWORD)
     2. nano $CONF_DIR/config.yaml          (mqtt.host, mqtt.username…)
-    3. sudo -u danny $APP_DIR/bridge/.venv/bin/danny-bridge check \\
+    3. runuser -u danny -- $APP_DIR/bridge/.venv/bin/danny-bridge check \\
          --config $CONF_DIR/config.yaml --env $CONF_DIR/danny-bridge.env
     4. systemctl start $SERVICE && journalctl -u $SERVICE -f
 

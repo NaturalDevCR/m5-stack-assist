@@ -66,6 +66,7 @@ async def _run(cfg, enter: bool) -> int:
     await manager.shutdown()
     for t in tasks:
         t.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
     await terminal.stop()
     return 0
 

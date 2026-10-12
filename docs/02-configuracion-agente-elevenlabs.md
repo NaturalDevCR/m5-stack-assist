@@ -186,3 +186,9 @@ Prueba `conv_3801m4q7hkm1f328xte07fzjy2xj` (6 preguntas nuevas): todas correctas
 DJ = DJ Ritmos Mulatos (mezcla con discos de acetato); show de Halloween "Thriller", tributo al Rey del Pop; premios siempre completos (los cuatro, con monto, hotel y lugar; excepción de brevedad ~70 palabras). Palabras clave ASR: −"DJ Acetato", +"Ritmos Mulatos", +"Thriller" (9/50).
 
 Prueba `conv_8501m4q4qd6w6kez29kxzee5p3wsqx`: premios completos con los 4 hoteles ✔ (30,5 s de audio), DJ ✔, show ✔. Primer audio 1,13–1,48 s.
+
+## Hallazgos del puente con el agente real (2026-10-12)
+
+- **Despedida:** enviar una "nota del sistema" como `user_message` activó la protección *Prompt Injection* del agente y ElevenLabs cortó la llamada (`1008 Conversation was stopped because the 'Prompt Injection' guardrail was triggered`). El puente ahora envía una frase natural de visitante ("Bueno, muchas gracias, ya nos tenemos que ir."): Danny se despide y llama a `end_call` (cierre 1000 del servidor). Verificado en `conv_0101m4qef225eg2r3jg0ec4c10w4`.
+- **"Tomar turno tras el silencio" = 7 s:** cuando los visitantes callan, Danny pregunta "¿siguen ahí?" con una transcripción vacía ("...") del lado del usuario. El puente ignora esas transcripciones y no reinicia la inactividad con esos recordatorios.
+- **"Terminar conversación tras el silencio" = 60 s:** red de seguridad del agente; el puente se despide antes (20 s de inactividad por defecto).

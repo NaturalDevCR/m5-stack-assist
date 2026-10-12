@@ -47,7 +47,7 @@ Después, dentro del contenedor (`pct enter <CTID>`):
 3. Verificar:
 
    ```bash
-   sudo -u danny /opt/danny-bridge/bridge/.venv/bin/danny-bridge check --config /etc/danny-bridge/config.yaml --env /etc/danny-bridge/danny-bridge.env
+   runuser -u danny -- /opt/danny-bridge/bridge/.venv/bin/danny-bridge check --config /etc/danny-bridge/config.yaml --env /etc/danny-bridge/danny-bridge.env
    ```
 
 4. `systemctl start danny-bridge && journalctl -u danny-bridge -f`

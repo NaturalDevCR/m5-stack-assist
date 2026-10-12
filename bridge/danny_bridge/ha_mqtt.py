@@ -139,7 +139,12 @@ class HomeAssistantMqtt:
                     await client.publish(f"{b}/availability", "online", qos=1, retain=True)
                     await client.subscribe(f"{b}/cmd/#", qos=1)
                     self._dirty.set()
-                    await asyncio.gather(self._publisher(client), self._commands(client))
+                    try:
+                        await asyncio.gather(self._publisher(client), self._commands(client))
+                    except asyncio.CancelledError:
+                        # apagado ordenado: el LWT sólo cubre caídas
+                        await client.publish(f"{b}/availability", "offline", qos=1, retain=True)
+                        raise
             except aiomqtt.MqttError as exc:
                 self._client = None
                 LOG.warning("MQTT desconectado (%s); reintento en %ss", exc, backoff)
