@@ -11,6 +11,10 @@ CONF_DIR=/etc/danny-bridge
 STATE_DIR=/var/lib/danny-bridge
 SERVICE=danny-bridge
 export UV_PYTHON_INSTALL_DIR="$APP_DIR/.python"
+# `pct exec` usa un PATH mínimo sin /usr/local/bin (donde se instala uv) y hereda el
+# LANG del nodo, que el contenedor no tiene generado.
+export PATH="/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+export LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 msg() { printf '\e[1;36m[danny]\e[0m %s\n' "$*"; }
 die() { printf '\e[1;31m[danny] ERROR:\e[0m %s\n' "$*" >&2; exit 1; }

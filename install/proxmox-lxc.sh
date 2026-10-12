@@ -120,8 +120,9 @@ done
 pct exec "$CTID" -- getent hosts deb.debian.org >/dev/null 2>&1 || die "el contenedor no tiene acceso a Internet"
 
 msg "Instalando Danny Bridge dentro del contenedor…"
-pct exec "$CTID" -- bash -c "apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl ca-certificates >/dev/null"
-pct exec "$CTID" -- bash -c "curl -fsSL '$RAW_BASE/install/lxc-install.sh' | REPO_URL='$REPO_URL' BRANCH='$BRANCH' bash"
+CT_ENV=(env LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin)
+pct exec "$CTID" -- "${CT_ENV[@]}" bash -c "apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl ca-certificates >/dev/null"
+pct exec "$CTID" -- "${CT_ENV[@]}" bash -c "curl -fsSL '$RAW_BASE/install/lxc-install.sh' | REPO_URL='$REPO_URL' BRANCH='$BRANCH' bash"
 
 CT_IP="$(pct exec "$CTID" -- hostname -I | awk '{print $1}')"
 cat <<EOF
