@@ -6,7 +6,7 @@
 #
 # Variables opcionales (anteponer al comando, p. ej. CTID=237 IP=192.168.20.37/24,gw=192.168.20.1):
 #   CTID  HOSTNAME_CT  CORES  RAM  SWAP  DISK  STORAGE  TEMPLATE_STORAGE  BRIDGE  IP  VLAN
-#   OS_VERSION (12 por defecto; 13 requiere Proxmox VE 9)
+#   OS_VERSION (13 por defecto; en Proxmox VE 8 se usa 12 automáticamente)
 #   REPO_URL  BRANCH  YES=1 (sin confirmación)
 set -euo pipefail
 
@@ -23,7 +23,7 @@ TEMPLATE_STORAGE="${TEMPLATE_STORAGE:-local}"
 BRIDGE="${BRIDGE:-vmbr0}"
 IP="${IP:-dhcp}"
 VLAN="${VLAN:-}"
-OS_VERSION="${OS_VERSION:-12}"
+OS_VERSION="${OS_VERSION:-13}"
 
 msg() { printf '\e[1;36m[danny]\e[0m %s\n' "$*"; }
 die() { printf '\e[1;31m[danny] ERROR:\e[0m %s\n' "$*" >&2; exit 1; }
