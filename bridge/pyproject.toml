@@ -1,6 +1,6 @@
 [project]
-name = "danny-bridge"
-version = "0.2.0"
+name = "voice-agent-bridge"
+version = "0.3.0"
 description = "Puente entre terminales de voz (AtomS3R / audio local), ElevenLabs Agents y Home Assistant"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,7 +14,7 @@ dependencies = [
 local = ["sounddevice>=0.5,<0.6"]
 
 [project.scripts]
-danny-bridge = "danny_bridge.__main__:main"
+voice-agent-bridge = "voice_agent_bridge.__main__:main"
 
 [dependency-groups]
 dev = ["pytest>=9.1,<10"]
@@ -24,7 +24,7 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["danny_bridge"]
+packages = ["voice_agent_bridge"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,4 +1,8 @@
 configuration:
+  name:
+    name: Nombre del agente
+    description: >-
+      Nombre del personaje o asistente (p. ej. Danny). Define el dispositivo en Home Assistant y el prefijo de las entidades (danny → sensor.danny_estado).
   elevenlabs_api_key:
     name: Clave API de ElevenLabs
     description: >-
@@ -13,22 +17,22 @@ configuration:
       aparece en el registro de la app.
   max_session_s:
     name: Duración máxima por grupo (s)
-    description: Tope de cada conversación; luego Danny se despide.
+    description: Tope de cada conversación; luego el agente se despide.
   idle_timeout_s:
     name: Inactividad antes de despedirse (s)
-    description: Segundos sin que los visitantes hablen tras la última respuesta de Danny.
+    description: Segundos sin que los usuarios hablen tras la última respuesta del agente.
   cooldown_s:
     name: Pausa entre grupos (s)
     description: Tiempo en que "Visitante detectado" se ignora tras una conversación.
   farewell_phrase:
     name: Frase de despedida
     description: >-
-      Frase de visitante que se envía para que Danny se despida y cuelgue. No uses
+      Frase de usuario que se envía para que el agente se despida y cuelgue. No uses
       "notas del sistema": activan la protección anti prompt-injection del agente.
   greetings:
     name: Saludos (opcional)
     description: >-
-      Banco de saludos (uno se elige al azar en cada conversación). Vacío = saludos incluidos de Danny.
+      Banco de saludos (uno se elige al azar en cada conversación). Vacío = saludos incluidos para ese nombre, si existen (Danny los tiene).
   log_level:
     name: Nivel de registro
     description: debug muestra más detalle.

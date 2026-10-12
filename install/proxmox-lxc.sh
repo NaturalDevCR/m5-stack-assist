@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crea un LXC Debian en Proxmox VE e instala el puente Danny dentro.
+# Crea un LXC Debian en Proxmox VE e instala Voice Agent Bridge dentro.
 # Ejecutar en la shell del NODO Proxmox (como root):
 #
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/NaturalDevCR/m5-stack-assist/main/install/proxmox-lxc.sh)"
@@ -14,7 +14,7 @@ set -euo pipefail
 REPO_URL="${REPO_URL:-https://github.com/NaturalDevCR/m5-stack-assist.git}"
 BRANCH="${BRANCH:-main}"
 RAW_BASE="${RAW_BASE:-https://raw.githubusercontent.com/NaturalDevCR/m5-stack-assist/$BRANCH}"
-HOSTNAME_CT="${HOSTNAME_CT:-danny-bridge}"
+HOSTNAME_CT="${HOSTNAME_CT:-voice-agent-bridge}"
 CORES="${CORES:-1}"
 RAM="${RAM:-512}"
 SWAP="${SWAP:-256}"
@@ -27,8 +27,8 @@ VLAN="${VLAN:-}"
 OS_VERSION="${OS_VERSION:-13}"
 AUTOLOGIN="${AUTOLOGIN:-1}"
 
-msg() { printf '\e[1;36m[danny]\e[0m %s\n' "$*"; }
-die() { printf '\e[1;31m[danny] ERROR:\e[0m %s\n' "$*" >&2; exit 1; }
+msg() { printf '\e[1;36m[voice-agent-bridge]\e[0m %s\n' "$*"; }
+die() { printf '\e[1;31m[voice-agent-bridge] ERROR:\e[0m %s\n' "$*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "ejecutar como root en el nodo Proxmox"
 command -v pct >/dev/null || die "no se encontró 'pct': ejecutar en un nodo Proxmox VE"
@@ -67,7 +67,7 @@ NET="name=eth0,bridge=$BRIDGE,ip=$IP"
 
 cat <<EOF
 
-  Danny Bridge — nuevo contenedor LXC
+  Voice Agent Bridge — nuevo contenedor LXC
   ───────────────────────────────────
   CTID ............ $CTID
   Hostname ........ $HOSTNAME_CT
@@ -107,7 +107,7 @@ pct create "$CTID" "$TEMPLATE_STORAGE:vztmpl/$TEMPLATE" \
   --rootfs "$STORAGE:$DISK" --net0 "$NET" \
   --arch "$HOST_ARCH" --ostype debian \
   --unprivileged 1 --features nesting=1 --onboot 1 --timezone host \
-  --description "Danny voice bridge — $REPO_URL" >/dev/null
+  --description "Voice Agent Bridge — $REPO_URL" >/dev/null
 if ! pct start "$CTID"; then
   printf '\n'
   pct start "$CTID" --debug 2>&1 | tail -20 || true
@@ -121,7 +121,7 @@ for _ in $(seq 1 30); do
 done
 pct exec "$CTID" -- getent hosts deb.debian.org >/dev/null 2>&1 || die "el contenedor no tiene acceso a Internet"
 
-msg "Instalando Danny Bridge dentro del contenedor…"
+msg "Instalando Voice Agent Bridge dentro del contenedor…"
 CT_ENV=(env LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin)
 if [[ "$AUTOLOGIN" == "1" ]]; then
   # Como los community-scripts: la consola de la UI de Proxmox entra como root sin
@@ -139,9 +139,9 @@ cat <<EOF
   ✔ Contenedor $CTID listo. IP: ${CT_IP:-desconocida}
 
   Configurar:   consola del contenedor en la UI de Proxmox (o pct enter $CTID)
-                nano /etc/danny-bridge/danny-bridge.env
-                nano /etc/danny-bridge/config.yaml
-                systemctl start danny-bridge && journalctl -u danny-bridge -f
+                nano /etc/voice-agent-bridge/voice-agent-bridge.env
+                nano /etc/voice-agent-bridge/config.yaml
+                systemctl start voice-agent-bridge && journalctl -u voice-agent-bridge -f
 
   El AtomS3R se conectará a:  ws://${CT_IP:-<ip>}:8765/v0/terminal
 

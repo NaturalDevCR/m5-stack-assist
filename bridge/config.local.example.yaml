@@ -1,7 +1,8 @@
 # Prueba en tu computadora con micrófono y parlante (sin Atom, sin MQTT).
 #   cp config.local.example.yaml config.local.yaml
 #   uv sync --extra local
-#   uv run danny-bridge run --config config.local.yaml --env ../tools/el_spike/.env --enter
+#   uv run voice-agent-bridge run --config config.local.yaml --env ../tools/el_spike/.env --enter
+name: Danny
 state_file: ./out/state.json
 log_level: INFO
 

@@ -2,13 +2,15 @@
 
 Secretos (nunca en el YAML ni en el repositorio):
   ELEVENLABS_API_KEY     clave con permiso ElevenAgents: Escribir
-  DANNY_TERMINAL_TOKEN   token que deben presentar los terminales WebSocket
+  TERMINAL_TOKEN   token que deben presentar los terminales WebSocket
   MQTT_PASSWORD          contraseña del usuario MQTT
 """
 
 from __future__ import annotations
 
 import os
+import re
+import unicodedata
 from dataclasses import MISSING, dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any
@@ -70,21 +72,43 @@ class MqttConfig:
     username: str = ""
     password: str = field(default="", repr=False)
     discovery_prefix: str = "homeassistant"
-    base_topic: str = "danny"
-    device_id: str = "danny_bridge"
-    device_name: str = "Danny"
+    # Vacíos = derivados del nombre del agente (ver Config.finalize):
+    #   device_name "Danny" → entity_prefix "danny", base_topic "voice_agent/danny",
+    #   device_id "voice_agent_danny"
+    device_name: str = ""
+    entity_prefix: str = ""
+    base_topic: str = ""
+    device_id: str = ""
+
+
+def slugify(text: str) -> str:
+    """'Recepción Norte' → 'recepcion_norte' (para entity_id y topics)."""
+    ascii_text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "_", ascii_text.lower()).strip("_")
+    return slug or "agente"
 
 
 @dataclass
 class Config:
-    persona: str = "danny"
+    # Nombre del agente/personaje: dispositivo en HA, prefijo de entidades y registros.
+    name: str = "Asistente"
     timezone: str = "America/Costa_Rica"
-    state_file: str = "/var/lib/danny-bridge/state.json"
+    state_file: str = "/var/lib/voice-agent-bridge/state.json"
     log_level: str = "INFO"
     elevenlabs: ElevenLabsConfig = field(default_factory=ElevenLabsConfig)
     session: SessionConfig = field(default_factory=SessionConfig)
     terminal: TerminalConfig = field(default_factory=TerminalConfig)
     mqtt: MqttConfig = field(default_factory=MqttConfig)
+
+    def finalize(self) -> "Config":
+        """Completa los valores derivados del nombre del agente."""
+        slug = slugify(self.name)
+        m = self.mqtt
+        m.device_name = m.device_name or self.name
+        m.entity_prefix = m.entity_prefix or slug
+        m.base_topic = m.base_topic or f"voice_agent/{slug}"
+        m.device_id = m.device_id or f"voice_agent_{slug}"
+        return self
 
 
 class ConfigError(ValueError):
@@ -137,9 +161,9 @@ def load_config(path: str | Path, env: dict[str, str] | None = None) -> Config:
         raise ConfigError(f"{path}: YAML inválido: {exc}") from exc
     cfg = _build(Config, data, "config")
     cfg.elevenlabs.api_key = env.get("ELEVENLABS_API_KEY", "")
-    cfg.terminal.websocket.token = env.get("DANNY_TERMINAL_TOKEN", "")
+    cfg.terminal.websocket.token = env.get("TERMINAL_TOKEN", "")
     cfg.mqtt.password = env.get("MQTT_PASSWORD", "")
-    return cfg
+    return cfg.finalize()
 
 
 def validate(cfg: Config) -> list[str]:
@@ -154,7 +178,7 @@ def validate(cfg: Config) -> list[str]:
     if cfg.terminal.type not in ("websocket", "local"):
         problems.append("terminal.type debe ser 'websocket' o 'local'")
     if cfg.terminal.type == "websocket" and not cfg.terminal.websocket.token:
-        problems.append("falta DANNY_TERMINAL_TOKEN en el entorno")
+        problems.append("falta TERMINAL_TOKEN en el entorno")
     s = cfg.session
     if s.idle_timeout_s <= 0 or s.max_session_s <= s.idle_timeout_s:
         problems.append("session: se requiere 0 < idle_timeout_s < max_session_s")

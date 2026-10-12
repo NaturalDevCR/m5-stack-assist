@@ -10,7 +10,7 @@ import struct
 
 from websockets.asyncio.server import serve
 
-from danny_bridge.terminals import Terminal
+from voice_agent_bridge.terminals import Terminal
 
 RATE = 16000
 

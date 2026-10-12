@@ -6,13 +6,13 @@ import pytest
 from websockets.asyncio.client import connect
 from websockets.exceptions import InvalidStatus
 
-from danny_bridge.audio import FrameAggregator, chunk_bytes
-from danny_bridge.config import (Config, ConfigError, MqttConfig, WebSocketTerminalConfig,
-                                 load_config, validate)
-from danny_bridge.ha_mqtt import HomeAssistantMqtt, discovery_messages
-from danny_bridge.session import SessionManager
-from danny_bridge.state import StateStore
-from danny_bridge.terminals.websocket import WebSocketTerminalServer
+from voice_agent_bridge.audio import FrameAggregator, chunk_bytes
+from voice_agent_bridge.config import (Config, ConfigError, WebSocketTerminalConfig, load_config,
+                                       slugify, validate)
+from voice_agent_bridge.ha_mqtt import HomeAssistantMqtt, discovery_messages
+from voice_agent_bridge.session import SessionManager
+from voice_agent_bridge.state import StateStore
+from voice_agent_bridge.terminals.websocket import WebSocketTerminalServer
 from tests.fakes import FakeTerminal
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +27,7 @@ def test_frame_aggregator():
 
 
 def test_example_config_loads_with_secrets_from_env():
-    env = {"ELEVENLABS_API_KEY": "k", "DANNY_TERMINAL_TOKEN": "t", "MQTT_PASSWORD": "p"}
+    env = {"ELEVENLABS_API_KEY": "k", "TERMINAL_TOKEN": "t", "MQTT_PASSWORD": "p"}
     cfg = load_config(ROOT / "config.example.yaml", env=env)
     assert cfg.elevenlabs.agent_id.startswith("agent_")
     assert cfg.elevenlabs.api_key == "k" and cfg.mqtt.password == "p"
@@ -44,7 +44,7 @@ def test_config_rejects_unknown_keys_and_missing_secrets(tmp_path):
     ok.write_text("elevenlabs:\n  agent_id: a\n", encoding="utf-8")
     problems = validate(load_config(ok, env={}))
     assert any("ELEVENLABS_API_KEY" in p for p in problems)
-    assert any("DANNY_TERMINAL_TOKEN" in p for p in problems)
+    assert any("TERMINAL_TOKEN" in p for p in problems)
 
 
 def test_state_store_rolls_day(tmp_path):
@@ -57,7 +57,7 @@ def test_state_store_rolls_day(tmp_path):
 
 
 def test_discovery_payloads():
-    msgs = discovery_messages(MqttConfig())
+    msgs = discovery_messages(Config(name="Danny").finalize().mqtt)
     uids = [p["unique_id"] for _, p in msgs]
     assert len(uids) == len(set(uids))
     for topic, payload in msgs:
@@ -65,7 +65,7 @@ def test_discovery_payloads():
         assert topic.startswith("homeassistant/") and topic.endswith("/config")
         assert payload["default_entity_id"].startswith(f"{component}.danny_")
         assert "object_id" not in payload, "object_id fue retirado en HA 2026.4"
-        assert payload["availability_topic"] == "danny/availability"
+        assert payload["availability_topic"] == "voice_agent/danny/availability"
     ids = {p["default_entity_id"] for _, p in msgs}
     for expected in ("sensor.danny_estado", "binary_sensor.danny_hablando",
                      "button.danny_iniciar_conversacion", "button.danny_visitante_detectado",
@@ -129,3 +129,13 @@ def test_websocket_terminal_auth_frames_and_button():
         assert buttons == ["short"]
         assert conns == [True, False]
     asyncio.run(go())
+
+
+def test_names_derive_generic_ids():
+    assert slugify("Recepción Norte") == "recepcion_norte"
+    m = Config(name="Recepción Norte").finalize().mqtt
+    assert (m.device_name, m.entity_prefix, m.base_topic, m.device_id) == (
+        "Recepción Norte", "recepcion_norte", "voice_agent/recepcion_norte",
+        "voice_agent_recepcion_norte")
+    ids = {p["default_entity_id"] for _, p in discovery_messages(m)}
+    assert "sensor.recepcion_norte_estado" in ids

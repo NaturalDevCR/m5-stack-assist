@@ -1,10 +1,10 @@
 import asyncio
 import time
 
-from danny_bridge.audio import duration_s
-from danny_bridge.config import Config
-from danny_bridge.session import SessionManager, Status
-from danny_bridge.state import StateStore
+from voice_agent_bridge.audio import duration_s
+from voice_agent_bridge.config import Config
+from voice_agent_bridge.session import SessionManager, Status
+from voice_agent_bridge.state import StateStore
 from tests.fakes import FakeAgent, FakeTerminal, is_silent, loud, start_fake_agent
 
 
@@ -80,7 +80,7 @@ def duration_bytes(seconds: float) -> int:
     return int(seconds * 16000) * 2
 
 
-def test_half_duplex_sends_silence_while_danny_speaks(tmp_path):
+def test_half_duplex_sends_silence_while_agent_speaks(tmp_path):
     async def go():
         agent = FakeAgent(greeting_ms=1000)
         server, url = await start_fake_agent(agent)

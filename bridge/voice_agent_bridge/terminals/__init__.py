@@ -1,4 +1,4 @@
-"""Terminales de audio: algo que captura voz (micrófono) y reproduce a Danny.
+"""Terminales de audio: algo que captura voz (micrófono) y reproduce al agente.
 
 Todas hablan PCM s16le mono 16 kHz con el gestor de sesiones.
 """
@@ -31,7 +31,7 @@ class Terminal:
         """Liberar recursos."""
 
     async def play(self, pcm: bytes) -> None:
-        """Encolar audio de Danny para reproducir."""
+        """Encolar audio del agente para reproducir."""
         raise NotImplementedError
 
     async def flush(self) -> None:

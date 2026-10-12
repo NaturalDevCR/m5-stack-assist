@@ -1,0 +1,24 @@
+[Unit]
+Description=Voice Agent Bridge (terminales <-> ElevenLabs Agents <-> Home Assistant)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=voicebridge
+Group=voicebridge
+WorkingDirectory=/opt/voice-agent-bridge/bridge
+EnvironmentFile=/etc/voice-agent-bridge/voice-agent-bridge.env
+ExecStart=/opt/voice-agent-bridge/bridge/.venv/bin/voice-agent-bridge run --config /etc/voice-agent-bridge/config.yaml --env /etc/voice-agent-bridge/voice-agent-bridge.env
+Restart=always
+RestartSec=5
+
+# Endurecimiento
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/voice-agent-bridge
+
+[Install]
+WantedBy=multi-user.target

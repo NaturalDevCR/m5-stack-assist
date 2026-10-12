@@ -1,4 +1,8 @@
 configuration:
+  name:
+    name: Agent name
+    description: >-
+      Character or assistant name (e.g. Danny). Sets the Home Assistant device and entity prefix (danny → sensor.danny_estado).
   elevenlabs_api_key:
     name: ElevenLabs API key
     description: Key with "ElevenAgents: Write" permission. Stored only in Home Assistant.
@@ -11,21 +15,21 @@ configuration:
       Secret the AtomS3R must present. Leave empty to generate one (shown in the app log).
   max_session_s:
     name: Max conversation length (s)
-    description: Hard limit per group; then Danny says goodbye.
+    description: Hard limit per group; then the agent says goodbye.
   idle_timeout_s:
     name: Idle time before goodbye (s)
-    description: Seconds without visitor speech after Danny's last answer.
+    description: Seconds without user speech after the agent's last answer.
   cooldown_s:
     name: Cooldown between groups (s)
     description: Time during which "Visitor detected" is ignored after a conversation.
   farewell_phrase:
     name: Farewell phrase
     description: >-
-      Visitor-style phrase sent so Danny says goodbye and hangs up. Do not use
+      User-style phrase sent so the agent says goodbye and hangs up. Do not use
       "system notes": they trigger the agent's prompt-injection guardrail.
   greetings:
     name: Greetings (optional)
-    description: Greeting bank (one is picked at random per conversation). Empty = Danny's bundled greetings.
+    description: Greeting bank (one is picked at random per conversation). Empty = bundled greetings for that name, if any (Danny has them).
   log_level:
     name: Log level
   mqtt_host:

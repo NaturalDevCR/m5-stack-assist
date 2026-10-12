@@ -1,10 +1,11 @@
-# danny-bridge — puente de voz
+# Voice Agent Bridge — puente de voz
 
 Servicio Python que conecta un **terminal de audio** (AtomS3R o el micrófono/parlante del
-equipo) con **ElevenLabs Agents** y lo expone en **Home Assistant** por MQTT.
+equipo) con un agente de **ElevenLabs Agents** y lo expone en **Home Assistant** por MQTT.
+Es genérico: el personaje (Danny en este proyecto) es sólo configuración: `name`, agente y saludos.
 
 ```
-Terminal (AtomS3R / audio local) ⇄ danny-bridge ⇄ ElevenLabs Agents
+Terminal (AtomS3R / audio local) ⇄ voice-agent-bridge ⇄ ElevenLabs Agents
                                         ⇅ MQTT Discovery
                                   Home Assistant
 ```
@@ -12,10 +13,10 @@ Terminal (AtomS3R / audio local) ⇄ danny-bridge ⇄ ElevenLabs Agents
 ## Qué hace
 
 - Una conversación por grupo de visitantes: saludo variado (`{{saludo}}` desde
-  `personas/danny/saludos.txt`), conversación, despedida y cierre.
-- **Half-duplex anti-eco:** mientras Danny habla (más 300 ms) envía silencio en lugar del
+  `personas/<nombre>/saludos.txt` o los del formulario), conversación, despedida y cierre.
+- **Half-duplex anti-eco:** mientras el agente habla (más 300 ms) envía silencio en lugar del
   micrófono, para que nunca se escuche a sí mismo.
-- **Inactividad:** se cuenta desde que Danny termina su respuesta a algo que dijo el
+- **Inactividad:** se cuenta desde que el agente termina su respuesta a algo que dijo el
   visitante. Sus "¿siguen ahí?" no reinician el contador. Al vencer, provoca la despedida
   enviando una frase de visitante ("ya nos tenemos que ir"). Una "nota del sistema" activa
   la protección anti prompt-injection del agente y corta la llamada.
@@ -26,7 +27,7 @@ Terminal (AtomS3R / audio local) ⇄ danny-bridge ⇄ ElevenLabs Agents
 
 ## Instalación como app de Home Assistant
 
-Forma recomendada: ver [../danny_bridge/DOCS.md](../danny_bridge/DOCS.md) y el README principal.
+Forma recomendada: ver [../voice_agent_bridge/DOCS.md](../voice_agent_bridge/DOCS.md) y el README principal.
 
 ## Instalación en Proxmox (LXC)
 
@@ -45,24 +46,24 @@ CTID=237 IP=192.168.20.37/24,gw=192.168.20.1 VLAN=20 STORAGE=local-zfs bash -c "
 
 Después, dentro del contenedor (`pct enter <CTID>`):
 
-1. `nano /etc/danny-bridge/danny-bridge.env`: `ELEVENLABS_API_KEY` (permiso *ElevenAgents:
+1. `nano /etc/voice-agent-bridge/voice-agent-bridge.env`: `ELEVENLABS_API_KEY` (permiso *ElevenAgents:
    Escribir*) y `MQTT_PASSWORD`.
-2. `nano /etc/danny-bridge/config.yaml`: `mqtt.host` y `mqtt.username`.
+2. `nano /etc/voice-agent-bridge/config.yaml`: `mqtt.host` y `mqtt.username`.
 3. Verificar:
 
    ```bash
-   runuser -u danny -- /opt/danny-bridge/bridge/.venv/bin/danny-bridge check --config /etc/danny-bridge/config.yaml --env /etc/danny-bridge/danny-bridge.env
+   runuser -u voicebridge -- /opt/voice-agent-bridge/bridge/.venv/bin/voice-agent-bridge check --config /etc/voice-agent-bridge/config.yaml --env /etc/voice-agent-bridge/voice-agent-bridge.env
    ```
 
-4. `systemctl start danny-bridge && journalctl -u danny-bridge -f`
+4. `systemctl start voice-agent-bridge && journalctl -u voice-agent-bridge -f`
 
-Actualizar: `danny-bridge-update`. En cualquier Debian/Ubuntu sin Proxmox se puede usar
+Actualizar: `voice-agent-bridge-update`. En cualquier Debian/Ubuntu sin Proxmox se puede usar
 `install/lxc-install.sh` directamente.
 
 ## Home Assistant
 
 Requisito: integración MQTT con el broker (p. ej. Mosquitto) y un usuario MQTT para el puente.
-Las entidades aparecen solas en el dispositivo **Danny**:
+Las entidades aparecen solas en un dispositivo con el nombre del agente (`name`). Ejemplo con `name: Danny`:
 
 | Entidad | Uso |
 |---|---|
@@ -95,7 +96,7 @@ actions:
 mode: single
 ```
 
-Ejemplo: luz roja mientras Danny habla.
+Ejemplo: luz roja mientras el agente habla.
 
 ```yaml
 alias: Danny - luz al hablar
@@ -119,18 +120,18 @@ cd bridge && cp config.local.example.yaml config.local.yaml && uv sync --extra l
 ```
 
 ```bash
-cd bridge && uv run danny-bridge run --config config.local.yaml --env ../tools/el_spike/.env --enter
+cd bridge && uv run voice-agent-bridge run --config config.local.yaml --env ../tools/el_spike/.env --enter
 ```
 
-Enter inicia la conversación; Enter de nuevo hace que Danny se despida.
+Enter inicia la conversación; Enter de nuevo hace que el agente se despida.
 
 ## Terminal WebSocket (protocolo v0)
 
-`ws://<puente>:8765/v0/terminal?id=<nombre>` con `Authorization: Bearer <DANNY_TERMINAL_TOKEN>`.
+`ws://<puente>:8765/v0/terminal?id=<nombre>` con `Authorization: Bearer <TERMINAL_TOKEN>`.
 Audio PCM s16le 16 kHz mono en tramas binarias (ambos sentidos); control en JSON:
 `{"t":"mic","on":true}`, `{"t":"flush"}`, `{"t":"state","s":"speaking"}` (bajada) y
 `{"t":"hello"}`, `{"t":"button","ev":"short"}`, `{"t":"stats",...}` (subida). Detalle en
-[`danny_bridge/terminals/websocket.py`](danny_bridge/terminals/websocket.py).
+[`voice_agent_bridge/terminals/websocket.py`](voice_agent_bridge/terminals/websocket.py).
 
 ## Desarrollo
 

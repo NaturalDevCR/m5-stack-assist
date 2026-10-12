@@ -5,7 +5,7 @@ Estados: disabled · idle · connecting · listening · speaking · farewell · 
 Reglas (docs/01 §3.2):
 - Sólo una sesión a la vez; inicio por HA, botón del terminal o automatización.
 - Saludo variado: variable dinámica {{saludo}} elegida del banco de saludos.
-- Half-duplex (E0): mientras Danny "suena" (+ cola) se envía silencio en lugar del
+- Half-duplex (E0): mientras el agente "suena" (+ cola) se envía silencio en lugar del
   micrófono, para que nunca se escuche a sí mismo.
 - Fin por inactividad o por duración máxima: se pide al agente que se despida
   (nota del sistema → despedida + end_call); si no cierra, cierra el puente.
@@ -34,7 +34,7 @@ LOG = logging.getLogger(__name__)
 
 SETTING_KEYS = ("max_session_s", "idle_timeout_s", "cooldown_s")
 SETTING_LIMITS = {"max_session_s": (60, 900), "idle_timeout_s": (5, 120), "cooldown_s": (0, 600)}
-DEFAULT_GREETING = "Bienvenidos al Hotel Overlook. ¿Es su primera visita?"
+DEFAULT_GREETING = "Hola, bienvenidos. ¿En qué puedo ayudarles?"
 
 
 class Status(str, Enum):
@@ -83,7 +83,7 @@ class SessionManager:
         self._t_start = 0.0
         self._last_user = 0.0
         self._play_end = 0.0
-        # Inactividad: se cuenta desde el fin de la última respuesta de Danny a algo que
+        # Inactividad: se cuenta desde el fin de la última respuesta del agente a algo que
         # dijo el visitante (o del saludo). Sus "¿siguen ahí?" no reinician el contador.
         self._idle_base = 0.0
         self._reply_turn = True
@@ -156,7 +156,7 @@ class SessionManager:
     async def start(self, source: str = "manual", force: bool = False) -> bool:
         """Iniciar una conversación. `force` ignora el enfriamiento (no el apagado)."""
         if not self.enabled:
-            LOG.info("inicio (%s) ignorado: Danny está desactivado", source)
+            LOG.info("inicio (%s) ignorado: %s está desactivado", source, self.cfg.name)
             return False
         if self.status == Status.COOLDOWN and force:
             pass
@@ -205,10 +205,10 @@ class SessionManager:
             self._play_q.put_nowait(pcm)
 
     def on_agent_response(self, text: str) -> None:
-        LOG.info("DANNY: %s", text)
+        LOG.info("%s: %s", self.cfg.name.upper(), text)
 
     def on_user_transcript(self, text: str) -> None:
-        LOG.info("VISITANTE: %s", text)
+        LOG.info("USUARIO: %s", text)
         # ElevenLabs genera transcripciones vacías ("...") al tomar el turno por silencio:
         # no cuentan como actividad del visitante.
         if any(ch.isalnum() for ch in text):
@@ -233,7 +233,7 @@ class SessionManager:
         tail = self.cfg.session.playback_tail_ms / 1000
         for chunk in self._aggregator.push(pcm):
             if time.monotonic() < self._play_end + tail:
-                chunk = bytes(len(chunk))  # half-duplex: Danny no se oye a sí mismo
+                chunk = bytes(len(chunk))  # half-duplex: el agente no se oye a sí mismo
             if self._out_q.full():
                 self._out_q.get_nowait()  # nunca acumular retraso
             self._out_q.put_nowait(chunk)
@@ -291,7 +291,7 @@ class SessionManager:
         self._t_start = self._last_user = time.monotonic()
         sender = asyncio.create_task(self._sender(agent), name="mic-sender")
         # El saludo llega justo después de iniciar: esperarlo (máx. 3 s) para no
-        # anunciar "escuchando" mientras Danny está por hablar.
+        # anunciar "escuchando" mientras el agente está por hablar.
         deadline = time.monotonic() + 3
         while time.monotonic() >= self._play_end and time.monotonic() < deadline:
             await asyncio.sleep(0.05)

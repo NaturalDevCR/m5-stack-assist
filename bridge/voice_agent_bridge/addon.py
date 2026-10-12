@@ -13,12 +13,13 @@ import os
 import secrets
 from pathlib import Path
 
-from .config import Config, ConfigError
+from .config import Config, ConfigError, slugify
 from .state import StateStore
 
 LOG = logging.getLogger(__name__)
-DATA = Path(os.environ.get("DANNY_DATA_DIR", "/data"))
-DEFAULT_GREETINGS = os.environ.get("DANNY_GREETINGS_FILE", "/opt/danny/personas/danny/saludos.txt")
+DATA = Path(os.environ.get("BRIDGE_DATA_DIR", "/data"))
+# Saludos incluidos en la imagen: personas/<prefijo del nombre>/saludos.txt (p. ej. danny).
+PERSONAS_DIR = Path(os.environ.get("BRIDGE_PERSONAS_DIR", "/opt/voice-agent-bridge/personas"))
 SESSION_KEYS = ("max_session_s", "idle_timeout_s", "cooldown_s")
 
 
@@ -33,12 +34,13 @@ def terminal_token(options: dict, data_dir: Path) -> str:
     token = secrets.token_hex(24)
     path.write_text(token, encoding="utf-8")
     path.chmod(0o600)
-    LOG.warning("Token del terminal generado (guárdalo para el firmware del Atom): %s", token)
+    LOG.warning("Token del terminal generado (guárdalo para el firmware del terminal): %s", token)
     return token
 
 
 def build_config(options: dict, env: dict[str, str], data_dir: Path = DATA) -> Config:
     cfg = Config()
+    cfg.name = (options.get("name") or "Asistente").strip()
     cfg.state_file = str(data_dir / "state.json")
     cfg.log_level = str(options.get("log_level", "info")).upper()
 
@@ -51,7 +53,8 @@ def build_config(options: dict, env: dict[str, str], data_dir: Path = DATA) -> C
         path.write_text("\n".join(greetings) + "\n", encoding="utf-8")
         el.greetings_file = str(path)
     else:
-        el.greetings_file = DEFAULT_GREETINGS
+        bundled = PERSONAS_DIR / slugify(cfg.name) / "saludos.txt"
+        el.greetings_file = str(bundled) if bundled.is_file() else ""
 
     s = cfg.session
     for key in SESSION_KEYS:
@@ -72,7 +75,7 @@ def build_config(options: dict, env: dict[str, str], data_dir: Path = DATA) -> C
         m.port = int(env.get("MQTT_PORT") or 1883)
         m.username = env.get("MQTT_USERNAME", "")
         m.password = env.get("MQTT_PASSWORD", "")
-    return cfg
+    return cfg.finalize()
 
 
 def load_options(path: Path) -> dict:

@@ -1,7 +1,7 @@
-name: Danny Bridge
-version: "0.2.0"
-slug: danny_bridge
-description: Puente de voz entre el terminal AtomS3R, ElevenLabs Agents y Home Assistant
+name: Voice Agent Bridge
+version: "0.3.0"
+slug: voice_agent_bridge
+description: Terminal de voz (AtomS3R u otro) conectado a un agente de ElevenLabs y a Home Assistant
 url: https://github.com/NaturalDevCR/m5-stack-assist
 arch:
   - amd64
@@ -14,6 +14,7 @@ services:
 ports:
   8765/tcp: 8765
 options:
+  name: Danny
   elevenlabs_api_key: null
   agent_id: agent_9401m4hv6mgaecp9jbtbcwwan1qw
   terminal_token: ""
@@ -24,6 +25,7 @@ options:
   greetings: []
   log_level: info
 schema:
+  name: str
   elevenlabs_api_key: password
   agent_id: str
   terminal_token: password?

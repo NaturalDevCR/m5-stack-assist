@@ -1,21 +1,20 @@
 """Home Assistant vía MQTT Discovery.
 
-Entidades (un dispositivo "Danny"):
+Un dispositivo por agente. Con nombre "Danny" (prefijo "danny"):
   sensor.danny_estado, binary_sensor.danny_hablando / _escuchando / _terminal,
   button.danny_iniciar_conversacion / _visitante_detectado / _terminar_conversacion,
-  switch.danny_activo,
-  number.danny_duracion_maxima / _inactividad / _enfriamiento,
+  switch.danny_activo, number.danny_max_session_s / _idle_timeout_s / _cooldown_s,
   sensores de estadísticas y event.danny_sesion (session_started, session_ended, error).
 
-Topics (base_topic = "danny"):
-  danny/availability          online | offline (LWT)
-  danny/state                 JSON con el snapshot (retenido)
-  danny/event                 JSON {"event_type": ..., ...}
-  danny/cmd/start             iniciar ya (manual; ignora el enfriamiento)
-  danny/cmd/trigger           visitante detectado (automatizaciones; respeta el enfriamiento)
-  danny/cmd/end               pedir despedida y cerrar
-  danny/cmd/enabled           ON | OFF
-  danny/cmd/set/<ajuste>      número
+Topics (base_topic = "voice_agent/<prefijo>"):
+  <base>/availability          online | offline (LWT)
+  <base>/state                 JSON con el snapshot (retenido)
+  <base>/event                 JSON {"event_type": ..., ...}
+  <base>/cmd/start             iniciar ya (manual; ignora el enfriamiento)
+  <base>/cmd/trigger           visitante detectado (automatizaciones; respeta el enfriamiento)
+  <base>/cmd/end               pedir despedida y cerrar
+  <base>/cmd/enabled           ON | OFF
+  <base>/cmd/set/<ajuste>      número
 """
 
 from __future__ import annotations
@@ -41,16 +40,16 @@ SETTING_NAMES = {
 
 def discovery_messages(cfg: MqttConfig) -> list[tuple[str, dict]]:
     """(topic, payload) de MQTT Discovery. Función pura para poder probarla."""
-    b, dp, dev_id = cfg.base_topic, cfg.discovery_prefix, cfg.device_id
+    b, dp, dev_id, prefix = cfg.base_topic, cfg.discovery_prefix, cfg.device_id, cfg.entity_prefix
     device = {"identifiers": [dev_id], "name": cfg.device_name,
-              "manufacturer": "Room 237", "model": "Voice bridge", "sw_version": __version__}
+              "manufacturer": "Voice Agent Bridge", "model": "ElevenLabs Agents", "sw_version": __version__}
     common = {"device": device, "availability_topic": f"{b}/availability"}
     state = f"{b}/state"
 
     def ent(component: str, key: str, payload: dict) -> tuple[str, dict]:
         uid = f"{dev_id}_{key}"
         return (f"{dp}/{component}/{dev_id}/{key}/config",
-                {"unique_id": uid, "default_entity_id": f"{component}.danny_{key}",
+                {"unique_id": uid, "default_entity_id": f"{component}.{prefix}_{key}",
                  **common, **payload})
 
     msgs = [

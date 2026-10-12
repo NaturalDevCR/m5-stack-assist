@@ -1,21 +1,22 @@
-# Configuración del puente Danny. Copiar a /etc/danny-bridge/config.yaml.
-# Los SECRETOS van en /etc/danny-bridge/danny-bridge.env (ver danny-bridge.env.example).
+# Configuración de Voice Agent Bridge. Copiar a /etc/voice-agent-bridge/config.yaml.
+# Los SECRETOS van en /etc/voice-agent-bridge/voice-agent-bridge.env (ver voice-agent-bridge.env.example).
 
-persona: danny
+# Nombre del agente: dispositivo en Home Assistant y prefijo de entidades (danny → sensor.danny_estado)
+name: Danny
 timezone: America/Costa_Rica
-state_file: /var/lib/danny-bridge/state.json
+state_file: /var/lib/voice-agent-bridge/state.json
 log_level: INFO
 
 elevenlabs:
   agent_id: agent_9401m4hv6mgaecp9jbtbcwwan1qw
   base_url: https://api.elevenlabs.io
-  greetings_file: /opt/danny-bridge/personas/danny/saludos.txt
+  greetings_file: /opt/voice-agent-bridge/personas/danny/saludos.txt
   cost_per_min_usd: 0.08
 
 session:
   max_session_s: 240        # tope por grupo (el agente tiene 300 s como red de seguridad)
-  idle_timeout_s: 20        # sin que los visitantes hablen → Danny se despide
-  farewell_timeout_s: 12    # espera a que Danny se despida y cuelgue
+  idle_timeout_s: 20        # sin que los usuarios hablen → el agente se despide
+  farewell_timeout_s: 12    # espera a que el agente se despida y cuelgue
   cooldown_s: 30            # pausa antes de aceptar un nuevo "visitante detectado"
   playback_tail_ms: 300     # micrófono en silencio tras terminar de hablar (anti-eco)
   input_chunk_ms: 100
@@ -30,8 +31,5 @@ mqtt:
   enabled: true
   host: 192.168.1.10        # IP de tu broker (Mosquitto de Home Assistant)
   port: 1883
-  username: danny-bridge
+  username: voice-agent-bridge
   discovery_prefix: homeassistant
-  base_topic: danny
-  device_id: danny_bridge
-  device_name: Danny

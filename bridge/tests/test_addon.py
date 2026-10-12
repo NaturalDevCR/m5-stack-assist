@@ -1,10 +1,11 @@
 from pathlib import Path
 
-from danny_bridge.addon import build_config, sync_form_settings
-from danny_bridge.config import validate
-from danny_bridge.state import StateStore
+from voice_agent_bridge.addon import build_config, sync_form_settings
+from voice_agent_bridge.config import validate
+from voice_agent_bridge.state import StateStore
 
 OPTIONS = {
+    "name": "Danny",
     "elevenlabs_api_key": "clave",
     "agent_id": "agent_x",
     "terminal_token": "",
@@ -27,6 +28,7 @@ def test_build_config_from_options_and_mqtt_service(tmp_path: Path):
     assert cfg.terminal.type == "websocket" and cfg.terminal.websocket.port == 8765
     assert cfg.mqtt.enabled and cfg.mqtt.host == "core-mosquitto" and cfg.mqtt.password == "pw"
     assert cfg.state_file == str(tmp_path / "state.json")
+    assert cfg.mqtt.entity_prefix == "danny" and cfg.mqtt.base_topic == "voice_agent/danny"
 
 
 def test_terminal_token_is_generated_once_and_persisted(tmp_path: Path):

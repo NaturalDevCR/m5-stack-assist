@@ -21,4 +21,4 @@ else
 fi
 export MQTT_HOST MQTT_PORT MQTT_USERNAME MQTT_PASSWORD
 
-exec python3 -m danny_bridge addon --options /data/options.json
+exec python3 -m voice_agent_bridge addon --options /data/options.json

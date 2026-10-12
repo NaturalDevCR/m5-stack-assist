@@ -1,8 +1,8 @@
 """CLI del puente.
 
-  danny-bridge run   [--config FILE] [--terminal local] [--enter]
-  danny-bridge check [--config FILE]
-  danny-bridge addon [--options /data/options.json]   (app de Home Assistant)
+  voice-agent-bridge run   [--config FILE] [--terminal local] [--enter]
+  voice-agent-bridge check [--config FILE]
+  voice-agent-bridge addon [--options /data/options.json]   (app de Home Assistant)
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ from .session import SessionManager
 from .state import StateStore
 from .terminals import create_terminal
 
-LOG = logging.getLogger("danny_bridge")
-DEFAULT_CONFIG = "/etc/danny-bridge/config.yaml"
-DEFAULT_ENV = "/etc/danny-bridge/danny-bridge.env"
+LOG = logging.getLogger("voice_agent_bridge")
+DEFAULT_CONFIG = "/etc/voice-agent-bridge/config.yaml"
+DEFAULT_ENV = "/etc/voice-agent-bridge/voice-agent-bridge.env"
 
 
 def _setup_logging(level: str) -> None:
@@ -64,7 +64,7 @@ async def _run(cfg, enter: bool, addon: bool = False) -> int:
     for sig in (signal.SIGINT, signal.SIGTERM):
         with contextlib.suppress(NotImplementedError):
             loop.add_signal_handler(sig, stop.set)
-    LOG.info("danny-bridge %s listo (terminal=%s, mqtt=%s)", __version__, cfg.terminal.type,
+    LOG.info("voice-agent-bridge %s listo (terminal=%s, mqtt=%s)", __version__, cfg.terminal.type,
              "sí" if cfg.mqtt.enabled else "no")
     await stop.wait()
     LOG.info("deteniendo…")
@@ -86,7 +86,7 @@ async def _enter_loop(manager: SessionManager) -> None:
             loop.call_soon_threadsafe(queue.put_nowait, line)
 
     threading.Thread(target=reader, daemon=True).start()
-    print("\n>>> Pulsa Enter para hablar con Danny (Enter de nuevo para que se despida). Ctrl+C para salir.\n")
+    print(f"\n>>> Pulsa Enter para hablar con {manager.cfg.name} (Enter de nuevo para que se despida). Ctrl+C para salir.\n")
     while True:
         await queue.get()
         if manager.status.value in ("listening", "speaking", "farewell"):
@@ -130,19 +130,19 @@ def cmd_addon(args) -> int:
     options = load_options(Path(args.options))
     _setup_logging(str(options.get("log_level", "info")))
     cfg = build_config(options, dict(os.environ))
-    problems = [p for p in validate(cfg) if "DANNY_TERMINAL_TOKEN" not in p]
+    problems = [p for p in validate(cfg) if "TERMINAL_TOKEN" not in p]
     if problems:
         for p in problems:
             LOG.error("configuración de la app: %s", p.replace("falta ELEVENLABS_API_KEY en el entorno",
                                                                "falta la clave API de ElevenLabs"))
         return 1
     if not cfg.mqtt.enabled:
-        LOG.warning("sin broker MQTT: Danny funcionará, pero no aparecerá en Home Assistant")
+        LOG.warning("sin broker MQTT: %s funcionará, pero no aparecerá en Home Assistant", cfg.name)
     return asyncio.run(_run(cfg, enter=False, addon=True))
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="danny-bridge", description=__doc__.splitlines()[0])
+    p = argparse.ArgumentParser(prog="voice-agent-bridge", description=__doc__.splitlines()[0])
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="cmd", required=True)
     for name in ("run", "check"):
