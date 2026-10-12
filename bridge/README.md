@@ -33,7 +33,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/NaturalDevCR/m5-stack-as
 ```
 
 Crea un LXC Debian 13 sin privilegios (Debian 12 en Proxmox VE 8) (1 núcleo, 512 MB, 4 GB, DHCP en `vmbr0`), instala el
-servicio y genera el token del terminal. Para personalizar, antepone variables, por ejemplo:
+servicio, genera el token del terminal y activa el autologin en la consola de Proxmox (como los community-scripts; `AUTOLOGIN=0` lo desactiva). Para personalizar, antepone variables, por ejemplo:
 
 ```bash
 CTID=237 IP=192.168.20.37/24,gw=192.168.20.1 VLAN=20 STORAGE=local-zfs bash -c "$(curl -fsSL https://raw.githubusercontent.com/NaturalDevCR/m5-stack-assist/main/install/proxmox-lxc.sh)"

@@ -7,6 +7,7 @@
 # Variables opcionales (anteponer al comando, p. ej. CTID=237 IP=192.168.20.37/24,gw=192.168.20.1):
 #   CTID  HOSTNAME_CT  CORES  RAM  SWAP  DISK  STORAGE  TEMPLATE_STORAGE  BRIDGE  IP  VLAN
 #   OS_VERSION (13 por defecto; en Proxmox VE 8 se usa 12 automáticamente)
+#   AUTOLOGIN (1 por defecto: consola de Proxmox sin contraseña; 0 para desactivar)
 #   REPO_URL  BRANCH  YES=1 (sin confirmación)
 set -euo pipefail
 
@@ -24,6 +25,7 @@ BRIDGE="${BRIDGE:-vmbr0}"
 IP="${IP:-dhcp}"
 VLAN="${VLAN:-}"
 OS_VERSION="${OS_VERSION:-13}"
+AUTOLOGIN="${AUTOLOGIN:-1}"
 
 msg() { printf '\e[1;36m[danny]\e[0m %s\n' "$*"; }
 die() { printf '\e[1;31m[danny] ERROR:\e[0m %s\n' "$*" >&2; exit 1; }
@@ -121,6 +123,13 @@ pct exec "$CTID" -- getent hosts deb.debian.org >/dev/null 2>&1 || die "el conte
 
 msg "Instalando Danny Bridge dentro del contenedor…"
 CT_ENV=(env LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin)
+if [[ "$AUTOLOGIN" == "1" ]]; then
+  # Como los community-scripts: la consola de la UI de Proxmox entra como root sin
+  # contraseña. La contraseña de root queda bloqueada (sin acceso por red).
+  msg "Activando autologin en la consola de Proxmox…"
+  # shellcheck disable=SC2016  # $TERM debe quedar literal en el archivo de systemd
+  pct exec "$CTID" -- "${CT_ENV[@]}" bash -c 'mkdir -p /etc/systemd/system/container-getty@.service.d && printf "%s\n" "[Service]" "ExecStart=" "ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud tty%I 115200,38400,9600 \$TERM" > /etc/systemd/system/container-getty@.service.d/override.conf && systemctl daemon-reload && systemctl restart "container-getty@*" || true'
+fi
 pct exec "$CTID" -- "${CT_ENV[@]}" bash -c "apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl ca-certificates >/dev/null"
 pct exec "$CTID" -- "${CT_ENV[@]}" bash -c "curl -fsSL '$RAW_BASE/install/lxc-install.sh' | REPO_URL='$REPO_URL' BRANCH='$BRANCH' bash"
 
@@ -129,7 +138,7 @@ cat <<EOF
 
   ✔ Contenedor $CTID listo. IP: ${CT_IP:-desconocida}
 
-  Configurar:   pct enter $CTID
+  Configurar:   consola del contenedor en la UI de Proxmox (o pct enter $CTID)
                 nano /etc/danny-bridge/danny-bridge.env
                 nano /etc/danny-bridge/config.yaml
                 systemctl start danny-bridge && journalctl -u danny-bridge -f
